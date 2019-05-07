@@ -240,6 +240,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 showProgress(true);
             }
             else    {
+                mEmailView.setError(getString(R.string.error_invalid_email));
+                mPasswordView.setError("Salah password");
                 //Salah Login
             }
 
