@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,6 +32,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.clay.tspsurat.model.Penguna;
+import com.clay.tspsurat.utils.SessionHelper;
+import com.orm.SugarApp;
 import com.orm.SugarContext;
 import com.orm.SugarDb;
 
@@ -69,20 +72,37 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mProgressView;
     private View mLoginFormView;
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        SugarContext.terminate();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        SugarDb db = new SugarDb(this);
-        db.onCreate(db.getDB());
+
+        if(SessionHelper.getInstance(this).getAppFirstTime()){
+            Log.d("MainApp","First session");
+            SugarDb db = new SugarDb(this);
+            db.onCreate(db.getDB());
+            SessionHelper.getInstance(this).setAppFirstTime(false);
+        }
+        else {
+            Log.d("MainApp","Not First session");
+
+        }
+
         SugarContext.init(this);
 
         Penguna admin   = Penguna.findById(Penguna.class, 1l);
         if (admin == null)
         {
             Penguna penguna = new Penguna(
-                    "nama", "admin", "admin", "1", 1);
+                    "Adminstrator", "admin", "admin", "1", 1);
             penguna.save();
         }
         Penguna petugas = Penguna.findById(Penguna.class, 2l);
@@ -211,11 +231,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
-            showProgress(true);
-            LoginSucces();
+            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask.execute((Void) null);
 
-//            mAuthTask = new UserLoginTask(email, password);
-//            mAuthTask.execute((Void) null);
+            if (mAuthTask.doInBackground())
+            {
+                LoginSucces();
+                showProgress(true);
+            }
+            else    {
+                //Salah Login
+            }
+
         }
     }
 
@@ -353,17 +380,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
 
 
-//            List<Penguna> pengunaList = Penguna.listAll(Penguna.class);
-//            System.out.println("pengunaList = " + pengunaList.size());
-//
-//            for (Penguna penguna: pengunaList
-//                 ) {
-//                if (penguna.getUsername().equals(mEmail))
-//                {
-//                    pengunaID = penguna.getId();
-//                    return penguna.getUserpass().equals(mPassword);
-//                }
-//            }
+            List<Penguna> pengunaList = Penguna.listAll(Penguna.class);
+            System.out.println("pengunaList = " + pengunaList.size());
+            System.out.println("pengunaList = " + pengunaList);
+            for (Penguna penguna: pengunaList
+                 ) {
+                if (penguna.getUsername().equals(mEmail))
+                {
+                    pengunaID = penguna.getId();
+                    return penguna.getUserpass().equals(mPassword);
+                }
+            }
 
             for (String credential : DUMMY_CREDENTIALS) {
                 String[] pieces = credential.split(":");
@@ -373,8 +400,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 }
             }
 
-            // TODO: register the new account here.
-            return true;
+            return false;
         }
 
         @Override

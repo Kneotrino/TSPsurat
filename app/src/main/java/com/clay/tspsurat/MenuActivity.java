@@ -24,6 +24,13 @@ import java.util.List;
 public class MenuActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        SugarContext.terminate();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +61,8 @@ public class MenuActivity extends AppCompatActivity
         navUsername = (TextView) headerView.findViewById(R.id.txtNama);
         navUserNip = (TextView) headerView.findViewById(R.id.txtNip);
 
+        SugarContext.init(this);
+
         getPenguna();
         setView();
     }
@@ -64,8 +73,8 @@ public class MenuActivity extends AppCompatActivity
 
     private void setView() {
         System.out.println("penguna = " + penguna);
-        navUsername.setText("Nama");
-        navUserNip.setText("Nip");
+        navUsername.setText(penguna.getNama());
+        navUserNip.setText(penguna.getNip());
 
     }
 
@@ -125,12 +134,11 @@ public class MenuActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_data_simpangan) {
 
-        } else if (id == R.id.nav_start) {
-
         }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
+
 }
