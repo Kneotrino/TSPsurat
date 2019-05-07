@@ -2,8 +2,12 @@ package com.clay.tspsurat;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -15,14 +19,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.clay.tspsurat.fragment.PengunaFragment;
 import com.clay.tspsurat.model.Penguna;
 import com.orm.SugarContext;
-import com.orm.SugarDb;
-
-import java.util.List;
 
 public class MenuActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener,
+        PengunaFragment.OnListFragmentInteractionListener{
 
 
     @Override
@@ -31,6 +34,7 @@ public class MenuActivity extends AppCompatActivity
         SugarContext.terminate();
     }
 
+        FloatingActionButton fab;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,7 +43,7 @@ public class MenuActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -118,11 +122,19 @@ public class MenuActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+//    @Override
+//    public void onFragmentInteraction(Uri uri) {
+//
+//    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+
+        FragmentManager fm = getSupportFragmentManager();
+        Fragment fragmentData = null;
 
         if (id == R.id.nav_data_kantor) {
             // Handle the camera action
@@ -132,13 +144,56 @@ public class MenuActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_manage) {
 
+            fragmentData = new PengunaFragment();
+            setPengunaView();
         } else if (id == R.id.nav_data_simpangan) {
 
         }
+
+        FragmentTransaction fragmentTransaction = MenuActivity.this.getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.FrameFragment,fragmentData);
+        fragmentTransaction.commit();
+
+
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
+    private void setPengunaView() {
+        setTitle("Data Penguna");
+        hideFloatingActionButton(fab);
+    }
 
+    private void hideFloatingActionButton(FloatingActionButton fab) {
+        CoordinatorLayout.LayoutParams params =
+                (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
+        FloatingActionButton.Behavior behavior =
+                (FloatingActionButton.Behavior) params.getBehavior();
+
+        if (behavior != null) {
+            behavior.setAutoHideEnabled(false);
+        }
+
+        fab.hide();
+    }
+
+    private void showFloatingActionButton(FloatingActionButton fab) {
+        fab.show();
+        CoordinatorLayout.LayoutParams params =
+                (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
+        FloatingActionButton.Behavior behavior =
+                (FloatingActionButton.Behavior) params.getBehavior();
+
+        if (behavior != null) {
+            behavior.setAutoHideEnabled(true);
+        }
+    }
+
+
+    @Override
+    public void onListFragmentInteraction(Penguna item) {
+        System.out.println("item = " + item);
+    }
 }
