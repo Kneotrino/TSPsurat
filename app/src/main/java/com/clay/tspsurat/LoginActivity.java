@@ -381,10 +381,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 return false;
             }
 
-
             List<Penguna> pengunaList = Penguna.listAll(Penguna.class);
-            System.out.println("pengunaList = " + pengunaList.size());
-            System.out.println("pengunaList = " + pengunaList);
             for (Penguna penguna: pengunaList
                  ) {
                 if (penguna.getUsername().equals(mEmail))

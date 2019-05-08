@@ -109,7 +109,7 @@ public class PengunaFragment extends Fragment {
      */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onListFragmentInteraction(Penguna item);
+        void onListFragmentInteraction(Object item);
     }
 
 }

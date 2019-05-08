@@ -163,7 +163,23 @@ public class MenuActivity extends AppCompatActivity
 
     private void setPengunaView() {
         setTitle("Data Penguna");
-        hideFloatingActionButton(fab);
+        //@android:drawable/ic_menu_add
+        fab.setImageResource(android.R.drawable.ic_menu_add);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                makeSnakeBar(view,"Berhasil Tambah");
+            }
+        });
+    }
+
+    private void makeSnakeBar(View view,String txt){
+
+        if (view == null)
+            view = findViewById(fab.getId());
+        Snackbar.make(view, "Tambah Penguna", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+
     }
 
     private void hideFloatingActionButton(FloatingActionButton fab) {
@@ -193,7 +209,10 @@ public class MenuActivity extends AppCompatActivity
 
 
     @Override
-    public void onListFragmentInteraction(Penguna item) {
-        System.out.println("item = " + item);
+    public void onListFragmentInteraction(Object item) {
+        if (item instanceof Penguna)
+        {
+            System.out.println("item = " + item);
+        }
     }
 }
