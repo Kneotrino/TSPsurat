@@ -1,5 +1,7 @@
 package com.clay.tspsurat;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
@@ -8,6 +10,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -17,15 +20,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.clay.tspsurat.fragment.NodeFragment;
 import com.clay.tspsurat.fragment.PengunaFragment;
+import com.clay.tspsurat.fragment.dummy.DummyContent;
 import com.clay.tspsurat.model.Penguna;
 import com.orm.SugarContext;
 
 public class MenuActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        PengunaFragment.OnListFragmentInteractionListener{
+        PengunaFragment.OnListFragmentInteractionListener,
+        NodeFragment.OnListFragmentInteractionListener
+
+{
 
 
     @Override
@@ -74,11 +84,12 @@ public class MenuActivity extends AppCompatActivity
     long PengunaID;
     TextView navUsername,navUserNip;
     Penguna penguna;
-
+    int levelPenguna;
+    String sLevelPenguna;
     private void setView() {
         System.out.println("penguna = " + penguna);
         navUsername.setText(penguna.getNama());
-        navUserNip.setText(penguna.getNip());
+        navUserNip.setText(sLevelPenguna);
 
     }
 
@@ -86,6 +97,11 @@ public class MenuActivity extends AppCompatActivity
         Bundle b = getIntent().getExtras();
         PengunaID = b.getLong("id");
         penguna = Penguna.findById(Penguna.class, PengunaID);
+        levelPenguna = penguna.getLevel();
+        if (levelPenguna == 0)
+            sLevelPenguna = "Petugas";
+        else if (levelPenguna == 1)
+            sLevelPenguna = "Admin";
     }
 
     @Override
@@ -128,6 +144,9 @@ public class MenuActivity extends AppCompatActivity
 //    }
 
     @SuppressWarnings("StatementWithEmptyBody")
+
+    String dataEdit = "";
+
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
@@ -137,28 +156,48 @@ public class MenuActivity extends AppCompatActivity
         Fragment fragmentData = null;
 
         if (id == R.id.nav_data_kantor) {
+            dataEdit = "Kantor";
+            fragmentData = new NodeFragment();
+            setNodeRt();
             // Handle the camera action
         } else if (id == R.id.nav_data_rt) {
-
+            dataEdit = "RT";
+            fragmentData = new NodeFragment();
+            setNodeRt();
         } else if (id == R.id.nav_data_rw) {
-
+            dataEdit = "RW";
+            fragmentData = new NodeFragment();
+            setNodeRt();
         } else if (id == R.id.nav_manage) {
-
             fragmentData = new PengunaFragment();
             setPengunaView();
         } else if (id == R.id.nav_data_simpangan) {
-
+            dataEdit = "Simpangan";
+            fragmentData = new NodeFragment();
+            setNodeRt();
         }
 
+        setTitle("Data "+ dataEdit);
         FragmentTransaction fragmentTransaction = MenuActivity.this.getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.FrameFragment,fragmentData);
         fragmentTransaction.commit();
 
-
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void setNodeRt() {
+        setTitle("Data RT");
+        //@android:drawable/ic_menu_add
+        fab.setImageResource(android.R.drawable.ic_menu_add);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                makeSnakeBar(view,"Berhasil Tambah");
+            }
+        });
+
     }
 
     private void setPengunaView() {
@@ -168,16 +207,76 @@ public class MenuActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                makeSnakeBar(view,"Berhasil Tambah");
+                if (CheckLevelPenguna()) {
+                    LayoutInflater li = LayoutInflater.from(MenuActivity.this);
+                    View prompt = li.inflate(R.layout.form_penguna, null);
+
+                    final EditText PengunaNama = prompt.findViewById(R.id.PengunaNama);
+                    final EditText PengunaUsername = prompt.findViewById(R.id.PengunaUsername);
+                    final EditText PengunaPassword = prompt.findViewById(R.id.PengunaPassword);
+                    final EditText PengunaNIP = prompt.findViewById(R.id.PengunaNIP);
+                    final EditText PengunaKontak = prompt.findViewById(R.id.PengunaKontak);
+                    final Spinner spinner = prompt.findViewById(R.id.PengunaLevel);
+
+
+                    final AlertDialog.Builder alertDialogBuilder =
+                            new AlertDialog.Builder(MenuActivity.this);
+                    alertDialogBuilder.setTitle("Admin Mode");
+                    alertDialogBuilder.setMessage("Masukan Data Penguna Baru");
+                    alertDialogBuilder.setView(prompt);
+                    alertDialogBuilder.setPositiveButton("Simpan",
+                            new DialogInterface.OnClickListener()
+                            {
+                                public void onClick(DialogInterface dialog, int id)
+                                {
+
+                                    Penguna penguna = new Penguna(
+                                            PengunaNama.getText().toString(),
+                                            PengunaUsername.getText().toString(),
+                                            PengunaPassword.getText().toString(),
+                                            PengunaNIP.getText().toString(),
+                                            PengunaKontak.getText().toString(),
+                                            spinner.getSelectedItemPosition());
+                                    System.out.println("penguna = " + penguna);
+                                    penguna.save();
+                                    makeSnakeBar(null,"Penguna Berhasil Tersimpan");
+
+                                    FragmentTransaction fragmentTransaction = MenuActivity.this.getSupportFragmentManager().beginTransaction();
+                                    fragmentTransaction.replace(R.id.FrameFragment,new PengunaFragment());
+                                    fragmentTransaction.commit();
+
+
+                                    dialog.cancel();
+                                }
+                            });
+                    alertDialogBuilder.setNegativeButton("Batal",
+                            new DialogInterface.OnClickListener()
+                            {
+                                public void onClick(DialogInterface dialog, int id)
+                                {
+                                    dialog.cancel();
+                                }
+                            });
+                    alertDialogBuilder.create().show();
+
+
+                }
             }
         });
+    }
+
+    private boolean CheckLevelPenguna() {
+        if (levelPenguna == 1)
+            return true;
+        makeSnakeBar(null,"Khusus Adminstrator");
+        return false;
     }
 
     private void makeSnakeBar(View view,String txt){
 
         if (view == null)
             view = findViewById(fab.getId());
-        Snackbar.make(view, "Tambah Penguna", Snackbar.LENGTH_LONG)
+        Snackbar.make(view, txt, Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
 
     }
@@ -209,10 +308,12 @@ public class MenuActivity extends AppCompatActivity
 
 
     @Override
-    public void onListFragmentInteraction(Object item) {
-        if (item instanceof Penguna)
-        {
-            System.out.println("item = " + item);
-        }
+    public void onListFragmentInteraction(Penguna penguna) {
+        System.out.println("penguna = " + penguna);
+    }
+
+    @Override
+    public void onListFragmentInteraction(DummyContent.DummyItem item) {
+        System.out.println("item = " + item);
     }
 }

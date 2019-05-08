@@ -3,11 +3,20 @@ package com.clay.tspsurat.model;
 import com.orm.SugarRecord;
 
 public class Penguna extends SugarRecord {
-    String nama,username,userpass,nip;
+    String nama,username,userpass,nip,kontak;
     int level;
 
 
     public Penguna() {
+    }
+
+    public Penguna(String nama, String username, String userpass, String nip, String kontak, int level) {
+        this.nama = nama;
+        this.username = username;
+        this.userpass = userpass;
+        this.nip = nip;
+        this.kontak = kontak;
+        this.level = level;
     }
 
     public Penguna(String nama, String username, String userpass, String nip, int level) {
@@ -20,12 +29,14 @@ public class Penguna extends SugarRecord {
 
     @Override
     public String toString() {
-        return "Penguna {" +
+        return "Penguna{" +
                 "nama='" + nama + '\'' +
+                ", username='" + username + '\'' +
+                ", userpass='" + userpass + '\'' +
                 ", nip='" + nip + '\'' +
-                ", ID='" + getId() + '\'' +
-                '}'
-                ;
+                ", kontak='" + kontak + '\'' +
+                ", level=" + level +
+                '}';
     }
 
     public String getNama() {

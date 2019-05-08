@@ -105,11 +105,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     "Adminstrator", "admin", "admin", "1", 1);
             penguna.save();
         }
+
         Penguna petugas = Penguna.findById(Penguna.class, 2l);
         if (petugas == null)
         {
             Penguna penguna = new Penguna(
-                    "petugas", "petugas", "petugas", "0", 0);
+                    "petugas", "petugas", "petugas", "2", 0);
             penguna.save();
         }
 
