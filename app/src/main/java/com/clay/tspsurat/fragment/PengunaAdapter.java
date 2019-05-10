@@ -36,8 +36,10 @@ public class PengunaAdapter extends RecyclerView.Adapter<PengunaAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
+
+        String id = mValues.get(position).getId().toString();
         holder.mItem = mValues.get(position);
-        holder.mIdView.setText(mValues.get(position).getNip());
+        holder.mIdView.setText(id);
         holder.mContentView.setText(mValues.get(position).getNama());
 
         holder.mView.setOnClickListener(new View.OnClickListener() {

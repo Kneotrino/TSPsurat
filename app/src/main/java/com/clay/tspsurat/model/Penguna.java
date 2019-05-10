@@ -78,4 +78,12 @@ public class Penguna extends SugarRecord {
     public void setLevel(int level) {
         this.level = level;
     }
+
+    public String getKontak() {
+        return kontak;
+    }
+
+    public void setKontak(String kontak) {
+        this.kontak = kontak;
+    }
 }

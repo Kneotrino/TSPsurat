@@ -10,6 +10,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -20,6 +21,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -29,6 +31,9 @@ import com.clay.tspsurat.fragment.PengunaFragment;
 import com.clay.tspsurat.fragment.dummy.DummyContent;
 import com.clay.tspsurat.model.Penguna;
 import com.orm.SugarContext;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class MenuActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -90,6 +95,10 @@ public class MenuActivity extends AppCompatActivity
         System.out.println("penguna = " + penguna);
         navUsername.setText(penguna.getNama());
         navUserNip.setText(sLevelPenguna);
+        if  (CheckLevelPenguna())
+            showFloatingActionButton(fab);
+        else
+            hideFloatingActionButton(fab);
 
     }
 
@@ -216,20 +225,41 @@ public class MenuActivity extends AppCompatActivity
                     final EditText PengunaPassword = prompt.findViewById(R.id.PengunaPassword);
                     final EditText PengunaNIP = prompt.findViewById(R.id.PengunaNIP);
                     final EditText PengunaKontak = prompt.findViewById(R.id.PengunaKontak);
+
+                    final List<EditText> editTextList = new LinkedList<>();
+                    editTextList.add(PengunaNama);
+                    editTextList.add(PengunaUsername);
+                    editTextList.add(PengunaPassword);
+                    editTextList.add(PengunaNIP);
+                    editTextList.add(PengunaKontak);
+
+
                     final Spinner spinner = prompt.findViewById(R.id.PengunaLevel);
 
 
-                    final AlertDialog.Builder alertDialogBuilder =
-                            new AlertDialog.Builder(MenuActivity.this);
-                    alertDialogBuilder.setTitle("Admin Mode");
-                    alertDialogBuilder.setMessage("Masukan Data Penguna Baru");
-                    alertDialogBuilder.setView(prompt);
-                    alertDialogBuilder.setPositiveButton("Simpan",
-                            new DialogInterface.OnClickListener()
-                            {
-                                public void onClick(DialogInterface dialog, int id)
-                                {
+                    final AlertDialog dialog = new AlertDialog.Builder(MenuActivity.this)
+                            .setView(prompt)
+                            .setTitle("Admin Mode Input Data Penguna")
+                            .setMessage("Masukan Data Penguna Baru")
+                            .setPositiveButton(android.R.string.ok, null) //Set to null. We override the onclick
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .create();
 
+                    dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                        @Override
+                        public void onShow(DialogInterface dialogInterface) {
+
+                            Button btnSimpan = ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE);
+                            Button btnBatal = ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_NEGATIVE);
+
+                            btnBatal.setText("Batal");
+                            btnSimpan.setText("Tambah");
+                            btnSimpan.setOnClickListener(new View.OnClickListener() {
+
+                                @Override
+                                public void onClick(View view) {
+                                    // TODO Do something
+                                    boolean inputCheck = checkEditText(editTextList);
                                     Penguna penguna = new Penguna(
                                             PengunaNama.getText().toString(),
                                             PengunaUsername.getText().toString(),
@@ -238,37 +268,44 @@ public class MenuActivity extends AppCompatActivity
                                             PengunaKontak.getText().toString(),
                                             spinner.getSelectedItemPosition());
                                     System.out.println("penguna = " + penguna);
-                                    penguna.save();
-                                    makeSnakeBar(null,"Penguna Berhasil Tersimpan");
+                                    if (inputCheck) {
+                                          penguna.save();
+                                          makeSnakeBar(null,"Penguna Berhasil Tersimpan");
+                                          dialog.dismiss();
+                                        FragmentTransaction fragmentTransaction = MenuActivity.this.getSupportFragmentManager().beginTransaction();
+                                        fragmentTransaction.replace(R.id.FrameFragment,new PengunaFragment());
+                                        fragmentTransaction.commit();
 
-                                    FragmentTransaction fragmentTransaction = MenuActivity.this.getSupportFragmentManager().beginTransaction();
-                                    fragmentTransaction.replace(R.id.FrameFragment,new PengunaFragment());
-                                    fragmentTransaction.commit();
-
-
-                                    dialog.cancel();
+                                    }
                                 }
                             });
-                    alertDialogBuilder.setNegativeButton("Batal",
-                            new DialogInterface.OnClickListener()
-                            {
-                                public void onClick(DialogInterface dialog, int id)
-                                {
-                                    dialog.cancel();
-                                }
-                            });
-                    alertDialogBuilder.create().show();
-
-
+                        }
+                    });
+                    dialog.show();
                 }
             }
         });
     }
 
+    private boolean checkEditText(List<EditText> editTextList) {
+
+        for (EditText editText: editTextList) {
+            if (TextUtils.isEmpty(editText.getText().toString())) {
+                editText.setError(getString(R.string.error_field_required));
+                return false;
+            }
+            if ( editText.getText().toString().length() < 4) {
+                editText.setError("Input minimal 4 karakter");
+                return false;
+            }
+        }
+        return true;
+    }
+
     private boolean CheckLevelPenguna() {
         if (levelPenguna == 1)
             return true;
-        makeSnakeBar(null,"Khusus Adminstrator");
+//        makeSnakeBar(null,"Khusus Adminstrator");
         return false;
     }
 
@@ -310,7 +347,125 @@ public class MenuActivity extends AppCompatActivity
     @Override
     public void onListFragmentInteraction(Penguna penguna) {
         System.out.println("penguna = " + penguna);
+        viewPenguna(penguna);
     }
+
+    private void viewPenguna(final Penguna penguna) {
+
+        LayoutInflater li = LayoutInflater.from(MenuActivity.this);
+        View prompt = li.inflate(R.layout.form_penguna, null);
+
+        final EditText PengunaNama = prompt.findViewById(R.id.PengunaNama);
+        final EditText PengunaUsername = prompt.findViewById(R.id.PengunaUsername);
+        final EditText PengunaPassword = prompt.findViewById(R.id.PengunaPassword);
+        final EditText PengunaNIP = prompt.findViewById(R.id.PengunaNIP);
+        final EditText PengunaKontak = prompt.findViewById(R.id.PengunaKontak);
+
+        final List<EditText> editTextList = new LinkedList<>();
+        editTextList.add(PengunaNama);
+        editTextList.add(PengunaUsername);
+        editTextList.add(PengunaPassword);
+        editTextList.add(PengunaNIP);
+        editTextList.add(PengunaKontak);
+
+        PengunaNama.setText(penguna.getNama());
+        PengunaUsername.setText(penguna.getUsername());
+        PengunaPassword.setText(penguna.getUserpass());
+        PengunaNIP.setText(penguna.getNip());
+        PengunaKontak.setText(penguna.getKontak());
+
+        final Spinner spinner = prompt.findViewById(R.id.PengunaLevel);
+
+
+        final AlertDialog dialog = new AlertDialog.Builder(MenuActivity.this)
+                .setView(prompt)
+                .setTitle("Data Penguna")
+                .setPositiveButton("Simpan", null) //Set to null. We override the onclick
+                .setNegativeButton("Hapus", null)
+                .setNeutralButton("Batal", null)
+                .create();
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+
+                Button btnSimpan = ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE);
+                Button btnHapus = ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_NEGATIVE);
+
+                btnHapus.setOnClickListener(
+                        new View.OnClickListener() {
+
+                            @Override
+                            public void onClick(View view) {
+                                Penguna hapuskan = Penguna.findById(Penguna.class,penguna.getId());
+
+                                    boolean delete = hapuskan.delete();
+                                    System.out.println("delete = " + delete);
+                                    makeSnakeBar(null,"Penguna Berhasil Terhapus");
+                                    FragmentTransaction fragmentTransaction = MenuActivity.this.getSupportFragmentManager().beginTransaction();
+                                    fragmentTransaction.replace(R.id.FrameFragment,new PengunaFragment());
+                                    fragmentTransaction.commit();
+                                    dialog.dismiss();
+                            }
+                        }
+                );
+
+                btnSimpan.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View view) {
+                        // TODO Do something
+                        boolean inputCheck = checkEditText(editTextList);
+
+                        Penguna update = Penguna.findById(Penguna.class,penguna.getId());
+                        update.setNama(PengunaNama.getText().toString());
+                        update.setUsername(PengunaUsername.getText().toString());
+                        update.setUserpass(PengunaPassword.getText().toString());
+                        update.setNip(PengunaNIP.getText().toString());
+                        update.setKontak(PengunaKontak.getText().toString());
+                        update.setLevel(spinner.getSelectedItemPosition());
+                        System.out.println("update = " + update);
+                        if (inputCheck) {
+                            update.save();
+                            makeSnakeBar(null,"Penguna Berhasil Tersimpan");
+                            dialog.dismiss();
+                            FragmentTransaction fragmentTransaction = MenuActivity.this.getSupportFragmentManager().beginTransaction();
+                            fragmentTransaction.replace(R.id.FrameFragment,new PengunaFragment());
+                            fragmentTransaction.commit();
+                        }
+                    }
+                });
+            }
+        });
+        dialog.show();
+
+    }
+
+//    private boolean viewKonfirmasi(String txt) {
+//        final boolean[] answer = new boolean[1];
+//        final AlertDialog dialog = new AlertDialog
+//                .Builder(MenuActivity.this)
+//                .setMessage(txt)
+//                .setPositiveButton(
+//                        "Iya",
+//                        new DialogInterface.OnClickListener() {
+//                            public void onClick(DialogInterface dialog, int id) {
+//                                dialog.cancel();
+//                                answer[0] = true;
+//                            }
+//                        })
+//                .setNegativeButton(
+//                "Tidak",
+//                new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int id) {
+//                        dialog.cancel();
+//                        answer[0] = false;
+//                    }
+//                })
+//                .create();
+//        dialog.show();
+//        return answer[0];
+//    }
 
     @Override
     public void onListFragmentInteraction(DummyContent.DummyItem item) {
