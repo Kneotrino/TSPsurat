@@ -3,22 +3,28 @@ package com.clay.tspsurat;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+
+import com.clay.tspsurat.fragment.MainFragment;
+import com.clay.tspsurat.model.Node;
+import com.clay.tspsurat.utils.SessionHelper;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import com.google.android.material.navigation.NavigationView;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
@@ -31,6 +37,7 @@ import com.clay.tspsurat.fragment.PengunaFragment;
 import com.clay.tspsurat.fragment.dummy.DummyContent;
 import com.clay.tspsurat.model.Penguna;
 import com.orm.SugarContext;
+import com.orm.SugarDb;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -38,7 +45,8 @@ import java.util.List;
 public class MenuActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         PengunaFragment.OnListFragmentInteractionListener,
-        NodeFragment.OnListFragmentInteractionListener
+        NodeFragment.OnListFragmentInteractionListener,
+        MainFragment.OnFragmentInteractionListener
 
 {
 
@@ -80,10 +88,54 @@ public class MenuActivity extends AppCompatActivity
         navUsername = (TextView) headerView.findViewById(R.id.txtNama);
         navUserNip = (TextView) headerView.findViewById(R.id.txtNip);
 
+        if (SessionHelper.getInstance(this).getAppFirstTime()) {
+            Log.d("MainApp", "First session");
+            SugarDb db = new SugarDb(this);
+            db.onCreate(db.getDB());
+            SessionHelper.getInstance(this).setAppFirstTime(false);
+            InputDataAwal();
+        } else {
+            Log.d("MainApp", "Not First session");
+            List<Node> nodes = Node.listAll(Node.class);
+//            for (Node node : nodes ) {
+//                System.out.println("node = " + node);
+//            }
+            System.out.println("nodes = " + nodes.size());
+
+//            String kunci = getResources().getString(R.string.google_maps_key);
+//            Places.initialize(this,kunci);
+        }
+
         SugarContext.init(this);
 
         getPenguna();
         setView();
+
+        FragmentTransaction fragmentTransaction = MenuActivity.this.getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.FrameFragment,new MainFragment());
+        fragmentTransaction.commit();
+
+    }
+
+    private static final int KANTOR = 0,RW =1,RT =2,SIMPANGAN=3;
+
+
+    private void InputDataAwal() {
+        System.out.println("INPUT DATA");
+        Node kantor = new Node("NAMA KEPALA","LURAH",KANTOR,1,0d,0d);
+        kantor.save();
+        for (int i = 1; i <= 10; i++) {
+            Node node = new Node("RW",RW,i,0d,0d);
+            node.save();
+        }
+        for (int i = 1; i <= 10; i++) {
+            Node node = new Node("RT",RT,i,0d,0d);
+            node.save();
+        }
+        for (int i = 1; i <= 10; i++) {
+            Node node = new Node("SIMPANGAN",SIMPANGAN,i,0d,0d);
+            node.save();
+        }
     }
 
     long PengunaID;
@@ -155,6 +207,7 @@ public class MenuActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
 
     String dataEdit = "";
+//    int Pilihan = 0;
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -166,26 +219,29 @@ public class MenuActivity extends AppCompatActivity
 
         if (id == R.id.nav_data_kantor) {
             dataEdit = "Kantor";
-            fragmentData = new NodeFragment();
+            fragmentData = NodeFragment.newInstance(KANTOR);
             setNodeRt();
             // Handle the camera action
         } else if (id == R.id.nav_data_rt) {
             dataEdit = "RT";
-            fragmentData = new NodeFragment();
+            fragmentData = NodeFragment.newInstance(RT);
             setNodeRt();
         } else if (id == R.id.nav_data_rw) {
             dataEdit = "RW";
-            fragmentData = new NodeFragment();
+            fragmentData = NodeFragment.newInstance(RW);
             setNodeRt();
         } else if (id == R.id.nav_manage) {
             fragmentData = new PengunaFragment();
             setPengunaView();
         } else if (id == R.id.nav_data_simpangan) {
             dataEdit = "Simpangan";
-            fragmentData = new NodeFragment();
+            fragmentData = NodeFragment.newInstance(SIMPANGAN);
             setNodeRt();
+        } else if (id == R.id.nav_main) {
+            dataEdit = "Main";
+            fragmentData = new MainFragment();
+            setView();
         }
-
         setTitle("Data "+ dataEdit);
         FragmentTransaction fragmentTransaction = MenuActivity.this.getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.FrameFragment,fragmentData);
@@ -197,7 +253,7 @@ public class MenuActivity extends AppCompatActivity
     }
 
     private void setNodeRt() {
-        setTitle("Data RT");
+//        setTitle("Data RT");
         //@android:drawable/ic_menu_add
         fab.setImageResource(android.R.drawable.ic_menu_add);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -467,8 +523,92 @@ public class MenuActivity extends AppCompatActivity
 //        return answer[0];
 //    }
 
+
     @Override
-    public void onListFragmentInteraction(DummyContent.DummyItem item) {
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onListFragmentInteraction(final Node item) {
         System.out.println("item = " + item);
+        String[] colors = {"Lihat", "Edit", "Hapus", "Batal"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Pilih Aksi :"+item.toString());
+        builder.setItems(colors, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // the user clicked on colors[which]
+                System.out.println("which = " + which);
+                switch (which) {
+                    case 0:
+                        System.out.println("Lihat");
+//                        System.out.println("item = " + item);
+//                        startActivity(myIntent);
+                        break;
+                    case 1:
+                        System.out.println("Edit");
+//                        EditRumahMakan(item);
+                        break;
+                    case 2:
+                        System.out.println("Hapus");
+                        HapusNode(item);
+//                        HapusRumahMakan(item);
+                        break;
+                    case 3:
+                        System.out.println("Batal");
+                        break;
+                }
+            }
+        });
+        builder.setCancelable(false);
+        builder.show();
+    }
+
+    private void HapusNode(final Node item) {
+        System.out.println("Hapus.item = " + item);
+        AlertDialog HapusDialog =new AlertDialog.Builder(this)
+                .setTitle("Hapus")
+                .setMessage("Anda Yakin untuk Hapus")
+                .setPositiveButton("Hapus", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        //your deleting code
+                        item.delete();
+                        dialog.dismiss();
+                        ResetDataFragment();
+                    }
+                })
+                .setNegativeButton("Batal", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .create();
+        HapusDialog.show();
+    }
+
+    private void ResetDataFragment() {
+
+        int pilihan = -1;
+        switch (dataEdit) {
+            case "Kantor":
+                pilihan = KANTOR;
+                break;
+            case "RT":
+                pilihan = RT;
+                break;
+            case "RW":
+                pilihan = RW;
+                break;
+            case "Simpangan":
+                pilihan = SIMPANGAN;
+                break;
+        }
+
+        FragmentTransaction fragmentTransaction = MenuActivity.this.getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.FrameFragment,NodeFragment.newInstance(pilihan));
+        fragmentTransaction.commit();
+
     }
 }

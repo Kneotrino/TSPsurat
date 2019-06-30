@@ -1,6 +1,6 @@
 package com.clay.tspsurat.fragment;
 
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +9,7 @@ import android.widget.TextView;
 import com.clay.tspsurat.R;
 import com.clay.tspsurat.fragment.NodeFragment.OnListFragmentInteractionListener;
 import com.clay.tspsurat.fragment.dummy.DummyContent.DummyItem;
+import com.clay.tspsurat.model.Node;
 
 import java.util.List;
 
@@ -19,10 +20,10 @@ import java.util.List;
  */
 public class NodeAdapter extends RecyclerView.Adapter<NodeAdapter.ViewHolder> {
 
-    private final List<DummyItem> mValues;
+    private final List<Node> mValues;
     private final OnListFragmentInteractionListener mListener;
 
-    public NodeAdapter(List<DummyItem> items, OnListFragmentInteractionListener listener) {
+    public NodeAdapter(List<Node> items, OnListFragmentInteractionListener listener) {
         mValues = items;
         mListener = listener;
     }
@@ -36,9 +37,29 @@ public class NodeAdapter extends RecyclerView.Adapter<NodeAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
+
         holder.mItem = mValues.get(position);
-        holder.mIdView.setText(mValues.get(position).id);
-        holder.mContentView.setText(mValues.get(position).content);
+        holder.mIdView.setText((position+1)+"");
+
+        String text = "";
+
+        switch (mValues.get(position).getKelas()) {
+            case 0:
+                text += "KANTOR-"+holder.mItem.getKeterangan()+"-"+holder.mItem.getNama();
+                break;
+            case 1:
+                text += "RW-"+holder.mItem.getNomor()+"-"+holder.mItem.getNama();
+                break;
+            case 2:
+                text += "RT-"+holder.mItem.getNomor()+"-"+holder.mItem.getNama();
+                break;
+            case 3:
+                text += "SIMPANGAN-"+holder.mItem.getNomor()+"-"+holder.mItem.getNama();
+                break;
+        }
+
+//        holder.mIdView.setText(holder.mItem.getId()+"");
+        holder.mContentView.setText(text);
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -61,7 +82,7 @@ public class NodeAdapter extends RecyclerView.Adapter<NodeAdapter.ViewHolder> {
         public final View mView;
         public final TextView mIdView;
         public final TextView mContentView;
-        public DummyItem mItem;
+        public Node mItem;
 
         public ViewHolder(View view) {
             super(view);

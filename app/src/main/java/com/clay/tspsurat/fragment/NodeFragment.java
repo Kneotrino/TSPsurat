@@ -2,17 +2,20 @@ package com.clay.tspsurat.fragment;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.clay.tspsurat.R;
-import com.clay.tspsurat.fragment.dummy.DummyContent;
-import com.clay.tspsurat.fragment.dummy.DummyContent.DummyItem;
+import com.clay.tspsurat.model.Node;
+import com.orm.SugarContext;
+import com.orm.query.Condition;
+import com.orm.query.Select;
 
 import java.util.List;
 
@@ -26,8 +29,10 @@ public class NodeFragment extends Fragment {
 
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
+    private static final String ARG_KELAS = "kelas";
     // TODO: Customize parameters
     private int mColumnCount = 1;
+    private int mKelas = -1;
     private OnListFragmentInteractionListener mListener;
 
     /**
@@ -39,10 +44,11 @@ public class NodeFragment extends Fragment {
 
     // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
-    public static NodeFragment newInstance(int columnCount) {
+    public static NodeFragment newInstance(int kelas) {
         NodeFragment fragment = new NodeFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
+        args.putInt(ARG_COLUMN_COUNT, 1);
+        args.putInt(ARG_KELAS, kelas);
         fragment.setArguments(args);
         return fragment;
     }
@@ -53,6 +59,7 @@ public class NodeFragment extends Fragment {
 
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
+            mKelas = getArguments().getInt(ARG_KELAS);
         }
     }
 
@@ -62,6 +69,8 @@ public class NodeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_node_list, container, false);
 
         // Set the adapter
+        SugarContext.init(getContext());
+
         if (view instanceof RecyclerView) {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) view;
@@ -70,7 +79,18 @@ public class NodeFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            recyclerView.setAdapter(new NodeAdapter(DummyContent.ITEMS, mListener));
+            List<Node> nodes = Node.listAll(Node.class);
+            System.out.println("mKelas = " + mKelas);
+
+            List<Node> list = Select.from(Node.class)
+                    .where(
+                            Condition.prop("Kelas").eq(mKelas)
+                    ).orderBy("nomor")
+                    .list();
+//            System.out.println("list.size() = " + list.size());
+//            Node.find(Node.class,)
+//            System.out.println("nodes = " + nodes.size());
+            recyclerView.setAdapter(new NodeAdapter(list, mListener));
         }
         return view;
     }
@@ -105,6 +125,6 @@ public class NodeFragment extends Fragment {
      */
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onListFragmentInteraction(DummyItem item);
+        void onListFragmentInteraction(Node item);
     }
 }
